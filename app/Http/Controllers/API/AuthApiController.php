@@ -34,11 +34,50 @@ class AuthApiController extends BaseController
         }
     }
 
+    public function login(Request $request){
+        $validator = $this->validateLoginFields($request);
+        if ($validator->fails()) {
+            return $this->errorResponse($validator->messages()->first());
+        }
+        try{
+            $user = User::where('email' , $request->email)->first();
+            if ($user && Hash::check($request->password, $user->password)){
+                $token = $user->createToken('apiToken')->plainTextToken;
+     
+                $response = [
+                    'user' => $user,
+                    'token' => $token,
+                    'message'  => "User logged in successfully.",
+                ];
+        
+                return $response;
+            }
+            else{
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Login Failed. The email or password is incorrect.'
+                ]);
+            }
+        }
+        catch(Exception $ex){
+            return $this->errorResponse("Server error! Plaase try again later.");
+        }
+       
+    }
+    
+
     protected function validateRegisterFields(Request $request){
         return \Illuminate\Support\Facades\Validator::make($request->all(), [
             'name' => 'required|string',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
+        ]);
+    }
+
+    protected function validateLoginFields(Request $request){
+        return \Illuminate\Support\Facades\Validator::make($request->only('email', 'password'), [
+            'email' => 'required|email|exists:users,email',
+            'password' => 'required|string|min:8',
         ]);
     }
 
