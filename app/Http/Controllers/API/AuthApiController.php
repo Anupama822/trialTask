@@ -98,7 +98,33 @@ class AuthApiController extends BaseController
         }
         
     }
+
+    public function resetPassword(Request $request){
+        $validator = \Illuminate\Support\Facades\Validator::make($request->only('new_password'), [
+            'new_password' => 'required|string|min:8',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->errorResponse($validator->messages()->first());
+        }
+
+        try{
+            $user = auth()->user();
+
+            $user->password = bcrypt($request->new_password);
+            $user->save();
     
+            return $this->successResponse([
+                'user'    => $user,
+                'message' => 'New Password set successfully.',
+            ]);
+        }
+
+        catch(Exception $ex){
+            return $this->errorResponse("Server error! Plaase try again later.");
+        }
+       
+    }
 
     protected function validateRegisterFields(Request $request){
         return \Illuminate\Support\Facades\Validator::make($request->all(), [

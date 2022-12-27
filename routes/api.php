@@ -23,5 +23,5 @@ Route::post('/login', ['App\Http\Controllers\API\AuthApiController', 'login'])->
 
 Route::group(['middleware' => ['auth:sanctum']], function(){
     Route::post('/change-password', ['App\Http\Controllers\API\AuthApiController', 'changePassword'])->name('changePassword');
-
+    Route::post('/reset-password', ['App\Http\Controllers\API\AuthApiController', 'resetPassword'])->name('resetPassword');
 });
