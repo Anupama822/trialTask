@@ -126,6 +126,14 @@ class AuthApiController extends BaseController
        
     }
 
+    public function getUserInfo(){
+        $data = auth()->user();
+        return response()->json([
+            'status' => true,
+            'data' => $data,
+        ]);
+    }
+
     protected function validateRegisterFields(Request $request){
         return \Illuminate\Support\Facades\Validator::make($request->all(), [
             'name' => 'required|string',
