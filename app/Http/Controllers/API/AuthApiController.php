@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\BaseController;
+use App\Notifications\EmailVerificationNotification;
 
 class AuthApiController extends BaseController
 {
@@ -48,6 +49,7 @@ class AuthApiController extends BaseController
                     'user' => $user,
                     'token' => $token,
                     'message'  => "User logged in successfully.",
+                    'verified' => $user->hasVerifiedEmail()
                 ];
         
                 return $response;
@@ -126,12 +128,38 @@ class AuthApiController extends BaseController
        
     }
 
-    public function getUserInfo(){
-        $data = auth()->user();
+    public function getUserInfo(Request $request)
+    {
+
+        $user = User::find($request->user()->id);
+
         return response()->json([
-            'status' => true,
-            'data' => $data,
+            'status'   => true,
+            'data'     => $user,
+            'verified' => $user->hasVerifiedEmail()
         ]);
+
+    }
+
+    public function verifyEmail($id)
+    {
+        $user = User::find($id);
+
+        if(!$user){
+            return redirect('/')->with(['error' => 'User not found.']);
+        }
+
+        if(!$user->is_email_verified) {
+
+            $user->forceFill([
+                'email_verified_at' => now() 
+            ]);
+            $user->update();
+
+        } 
+
+        return redirect('/')->with(['success' => 'Email verified successufully.']);
+
     }
 
     protected function validateRegisterFields(Request $request){
@@ -154,6 +182,8 @@ class AuthApiController extends BaseController
         $user = new User($request->only('name', 'email'));
         $user->password = bcrypt($request->password);
         $user->save();
+
+        $user->notify(new EmailVerificationNotification($user));
 
         return [
             'user' => $user,
