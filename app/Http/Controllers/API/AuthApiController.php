@@ -64,6 +64,40 @@ class AuthApiController extends BaseController
         }
        
     }
+
+    public function changePassword(Request $request){
+        $validator = \Illuminate\Support\Facades\Validator::make($request->only('old_password', 'new_password'), [
+            'old_password' => 'required|string|min:5',
+            'new_password' => 'required|string|min:8',
+        ]);
+        if ($validator->fails()) {
+            return $this->errorResponse($validator->messages()->first());
+        }
+
+        try{
+            $user = auth()->user();
+            if(!(Hash::check($request->old_password, $user->password))){
+                return $this->errorResponse("Your password doesnot match with password you had provided. Please Try Again.");
+            }
+
+            if(strcmp($request->new_password, $request->old_password) == 0){
+                return $this->errorResponse("New password cannot be same as old password. Please Try Again.");
+            }
+
+       
+            $user->password = bcrypt($request->new_password);
+            $user->save();
+
+            return $this->successResponse([
+                'user'    => $user,
+                'message' => 'Password changed successfully.',
+            ]);
+        }
+        catch(Exception $ex){
+            return $this->errorResponse("Server error! Plaase try again later.");
+        }
+        
+    }
     
 
     protected function validateRegisterFields(Request $request){
