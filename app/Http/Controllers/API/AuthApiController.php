@@ -13,7 +13,7 @@ class AuthApiController extends BaseController
 {
     public function register(Request $request){
 
-        $validator = $this->validateRegisterFields($request);
+        $validator = $this->validateRegisterFields($request);//validating fields
 
         if ($validator->fails()) {
             return $this->errorResponse($validator->messages()->first());
@@ -21,7 +21,7 @@ class AuthApiController extends BaseController
 
         try{
 
-            $userCreated = $this->returnCreatedUser($request);
+            $userCreated = $this->returnCreatedUser($request);//creates user 
 
             return $this->successResponse([
                 'user'    => $userCreated['user'],
